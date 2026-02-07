@@ -1,22 +1,37 @@
-<script setup>
-import Home from './pages/Home.vue'
-</script>
-
 <template>
-  <Home />
+  <Navbar
+    :activeTab="activeTab"
+    :user="user"
+    @update:activeTab="activeTab = $event"
+    @logout="logout"
+  />
+
+  <Login
+    v-if="!user"
+    :activeTab="activeTab"
+    @login-success="handleLogin"
+  />
+
+  <Home v-else />
 </template>
 
-<style scoped>
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.vue:hover {
-  filter: drop-shadow(0 0 2em #42b883aa);
-}
-</style>
+<script setup lang="ts">
+  import { ref } from 'vue';
+  import Navbar from './components/Navbar.vue';
+  import Login from './pages/Login.vue';
+  import Home from './pages/Home.vue';
+
+  const activeTab = ref<'signin' | 'register'>('signin');
+  const user = ref(null);
+
+  function handleLogin(loggedInUser: any, token: string) {
+    user.value = loggedInUser;
+    localStorage.setItem('user', JSON.stringify(loggedInUser));
+    localStorage.setItem('token', token);
+  }
+
+  function logout() {
+    localStorage.removeItem('token');
+    user.value = null;
+  }
+</script>
