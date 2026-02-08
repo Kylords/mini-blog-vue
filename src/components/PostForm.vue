@@ -1,5 +1,5 @@
 <template>
-  <form class="post-form">
+  <form class="post-form" @submit.prevent="submitPost">
     <input
       v-model="title"
       type="text"
@@ -13,7 +13,7 @@
       required
     ></textarea>
 
-    <button type="submit" @click.stop="submitPost">{{ post ? 'Update' : 'Create' }}</button>
+    <button type="submit" @click.stop>{{ post ? 'Update' : 'Create' }}</button>
     <button type="button" @click.stop="$emit('cancel')">Cancel</button>
   </form>
 </template>

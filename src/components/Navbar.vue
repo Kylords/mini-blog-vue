@@ -19,7 +19,7 @@
     </div>
 
     <div v-else>
-      <button @click="$emit('logout')">Logout</button>
+      <button class="logout" @click="$emit('logout')">Logout</button>
     </div>
   </div>
 </template>
@@ -82,6 +82,21 @@
   .nav-buttons button.active {
     background-color: white;
     color: #2563EB;
+  }
+
+  .logout {
+    padding: 0 20px;
+    border: none;
+    cursor: pointer;
+    background-color: #1D4ED8;
+    color: white;
+    height: 100%;
+    font-weight: 500;
+    transition: background-color 0.2s, transform 0.1s;
+  }
+  
+  .logout:hover {
+    background-color: #1E40AF;
   }
 }
 

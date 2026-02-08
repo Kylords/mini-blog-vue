@@ -5,10 +5,10 @@
       <h3>{{ post.title }}</h3>
       <p>{{ post.body }}</p>
       <div class="post-footer">
-        {{ post.commentsCount }} comments
+        {{ post.commentCount }} comments
         <span v-if="isOwner">
           <button class="edit-btn" @click.stop="editPost">Edit</button>
-          <button class="delete-btn" @click.stop="callDelete">Delete</button>
+          <button class="delete-btn" @click.stop="requestDelete">Delete</button>
         </span>
       </div>
     </div>
@@ -18,8 +18,17 @@
         :post="post"
         @post-edited="handleUpdated"
         @cancel="cancelEdit"
+        @click.stop
       />
     </div>
+
+    <ConfirmModal
+      :visible="showDeleteModal"
+      title="Delete Post"
+      message="Are you sure you want to delete this post?"
+      @confirm="confirmDelete"
+      @cancel="showDeleteModal = false"
+    />
   </div>
 </template>
 
@@ -29,6 +38,9 @@
   import { useMutation } from '@vue/apollo-composable';
   import { DELETE_POST } from '@/graphql/mutations/delete-post';
   import { useRouter } from 'vue-router';
+  import ConfirmModal from './ConfirmModal.vue';
+
+  const showDeleteModal = ref(false);
 
   const router = useRouter();
 
@@ -56,6 +68,15 @@
 
   function cancelEdit() {
     emit('start-edit', null);
+  }
+
+  function requestDelete() {
+    showDeleteModal.value = true;
+  }
+
+  async function confirmDelete() {
+    showDeleteModal.value = false;
+    await callDelete();
   }
 
   const notyf = new Notyf();

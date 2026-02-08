@@ -9,7 +9,7 @@
 
     <PostForm
       v-if="showForm"
-      @post-created="refetch"
+      @post-created="addPost"
     />
 
     <p v-if="loading">Loading...</p>

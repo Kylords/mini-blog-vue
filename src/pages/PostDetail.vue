@@ -27,19 +27,6 @@
           :key="comment.id"
           class="comment-card"
         >
-          <!-- <div>
-            <p class="comment-author">
-              {{ comment.user.name }}
-            </p>
-            <p class="comment-body">
-              {{ comment.body }}
-            </p>
-            <span class="comment-actions" v-if="currentUser?.id === comment.user.id">
-              <button class="edit-btn" @click.stop="editComment(comment.id)">Edit</button>
-              <button class="delete-btn" @click.stop="callDelete">Delete</button>
-            </span>
-          </div> -->
-
           <div v-if="editingCommentId !== comment.id">
             <p class="comment-author">
               {{ comment.user.name }}
@@ -49,7 +36,7 @@
             </p>
             <span class="comment-actions" v-if="currentUser?.id === comment.user.id">
               <button class="edit-btn" @click.stop="editComment(comment.id)">Edit</button>
-              <button class="delete-btn" @click.stop="callDelete(comment.id)">Delete</button>
+              <button class="delete-btn" @click.stop="requestDelete(comment.id)">Delete</button>
             </span>
           </div>
 
@@ -69,6 +56,14 @@
         </div>
       </div>
     </div>
+
+    <ConfirmModal
+      :visible="showDeleteModal"
+      title="Delete Comment"
+      message="Are you sure you want to delete this comment?"
+      @confirm="confirmDelete"
+      @cancel="cancelDelete"
+    />
   </div>
 </template>
 
@@ -79,6 +74,9 @@
   import { POST_DETAIL } from '@/graphql/queries/post-detail';
   import { DELETE_COMMENT } from '@/graphql/mutations/delete-comment';
   import CommentForm from '../components/CommentForm.vue';
+  import ConfirmModal from '../components/ConfirmModal.vue';
+
+  const showDeleteModal = ref(false);
 
   defineProps<{ currentUser: any }>();
 
@@ -97,24 +95,43 @@
   }
 
   function editComment(commentId: number) {
-    console.log('comment id', editingCommentId !== commentId)
     editingCommentId.value = commentId
   }
 
   const { mutate: deleteComment } = useMutation(DELETE_COMMENT);
 
+  const commentIdToDelete = ref<number | null>(null);
+
+  function requestDelete(commentId: number) {
+    showDeleteModal.value = true;
+    commentIdToDelete.value = commentId
+    console.log('request', commentIdToDelete.value)
+  }
+
+  async function confirmDelete() {
+    showDeleteModal.value = false;
+    await callDelete();
+  }
+
+  function cancelDelete() {
+    showDeleteModal.value = false;
+    commentIdToDelete.value = null;
+  }
+
   const notyf = new Notyf();
 
-  async function callDelete(commentId: number) {
+  async function callDelete() {
     try {
       const { data } = await deleteComment({
-        commentId: commentId,
+        commentId: commentIdToDelete.value,
       });
       await refetch();
     } catch (err: any) {
       console.error(err);
       notyf.error(err.message);
     }
+
+    commentIdToDelete.value = null;
   }
 
   function handleUpdated() {
