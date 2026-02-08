@@ -54,7 +54,7 @@
       user: { id: number; name: string };
       commentsCount: number;
     };
-    currentUser: { id: number };
+    currentUser: { id: number } | null;
     editingPostId: string | null;
   }>();
 
