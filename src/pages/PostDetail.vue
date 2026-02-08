@@ -90,10 +90,6 @@
   const post = computed(() => result.value?.post);
   const editingCommentId = ref<number | null>(null);
 
-  function handleCreate() {
-    console.log('created')
-  }
-
   function editComment(commentId: number) {
     editingCommentId.value = commentId
   }

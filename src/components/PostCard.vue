@@ -86,7 +86,7 @@
       const { data } = await deletePost({
         postId: props.post.id,
       });
-      emit('delete-post', data.deletePost.post);
+      emit('delete-post', data.deletePost.post.id);
       
     } catch (err: any) {
       console.error(err);
