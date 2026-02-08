@@ -6,13 +6,19 @@
     @logout="logout"
   />
 
-  <Login
+  <!-- <Login
     v-if="!user"
     :activeTab="activeTab"
     @login-success="handleLogin"
   />
 
-  <Home v-else :currentUser="user" />
+  <Home v-else :currentUser="user" /> -->
+
+  <router-view
+    :currentUser="user"
+    :activeTab="activeTab"
+    @login-success="handleLogin"
+  />
 </template>
 
 <script setup lang="ts">
@@ -20,6 +26,9 @@
   import Navbar from './components/Navbar.vue';
   import Login from './pages/Login.vue';
   import Home from './pages/Home.vue';
+  import { useRouter } from 'vue-router';
+
+  const router = useRouter()
 
   const activeTab = ref<'signin' | 'register'>('signin');
   const user = ref(null);
@@ -28,12 +37,14 @@
     user.value = loggedInUser;
     localStorage.setItem('user', JSON.stringify(loggedInUser));
     localStorage.setItem('token', token);
+    router.push({ name: 'Home' });
   }
 
   function logout() {
     localStorage.removeItem('user');
     localStorage.removeItem('token');
     user.value = null;
+    router.push({ name: 'Login' });
   }
 
   

@@ -1,6 +1,6 @@
 <template>
   <div class="navbar">
-    <div class="logo">MiniBlog</div>
+    <div class="logo" @click="toHomePage">MiniBlog</div>
 
     <div v-if="!user" class="nav-buttons">
       <button
@@ -25,12 +25,20 @@
 </template>
 
 <script setup lang="ts">
+  import { useRouter } from 'vue-router';
+
+  const router = useRouter();
+
   defineProps<{
     activeTab?: 'signin' | 'register';
     user?: any | null;
   }>();
 
   defineEmits(['update:activeTab', 'logout']);
+
+  function toHomePage() {
+    router.push({ name: 'Home' });
+  }
 </script>
 
 <style>
@@ -47,6 +55,11 @@
     font-weight: bold;
     display: flex;
     align-items: center;
+  }
+
+  .logo:hover {
+    cursor: pointer;
+    background-color: #3B82F6;
   }
 
   .nav-buttons {

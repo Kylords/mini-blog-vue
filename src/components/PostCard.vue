@@ -1,5 +1,5 @@
 <template>
-  <div class="post-card">
+  <div class="post-card" @click="openPost(post.id)">
     <div v-if="editingPostId !== post.id">
       <div class="post-user">{{ post.user.name }}</div>
       <h3>{{ post.title }}</h3>
@@ -28,6 +28,9 @@
   import PostForm from './PostForm.vue';
   import { useMutation } from '@vue/apollo-composable';
   import { DELETE_POST } from '@/graphql/mutations/delete-post';
+  import { useRouter } from 'vue-router';
+
+  const router = useRouter();
 
   const { mutate: deletePost } = useMutation(DELETE_POST);
 
@@ -52,7 +55,7 @@
   }
 
   function cancelEdit() {
-    emit('start-edit', null); // cancels editing
+    emit('start-edit', null);
   }
 
   const notyf = new Notyf();
@@ -72,6 +75,10 @@
 
   function handleUpdated(updatedPost: any) {
     cancelEdit()
+  }
+
+  function openPost(postId: number) {
+    router.push({ name: 'Post-Detail', params: { id: postId } });
   }
 </script>
 

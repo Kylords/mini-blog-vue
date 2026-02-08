@@ -23,7 +23,6 @@
       :currentUser="currentUser"
       :editingPostId="editingPostId"
       @start-edit="startEditing"
-      @open-post="openPost"
       @delete-post="refetch"
     />
   </div>
@@ -44,10 +43,6 @@
 
   function startEditing(postId: number) {
     editingPostId.value = postId;
-  }
-
-  function openPost(postId: number) {
-    console.log('Open post', postId);
   }
 
   function addPost(newPost: any) {
