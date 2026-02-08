@@ -31,6 +31,8 @@ import { reactive, ref } from 'vue';
 import { useMutation } from '@vue/apollo-composable';
 import { REGISTER_USER } from '../graphql/mutations/register';
 
+const emit = defineEmits(['login-success']);
+
 interface RegisterForm {
   name: string;
   email: string;
@@ -71,6 +73,7 @@ async function handleRegister() {
   } else {
     localStorage.setItem('token', data.token);
     console.log('Registered user:', data.user);
+    emit('login-success', data.user, data.token);
   }
 }
 </script>
