@@ -23,31 +23,39 @@
         </div>
 
         <div
-          v-for="comment in post.visibleComments"
-          :key="comment.id"
+          v-for="comment in post.visibleComments.edges"
+          :key="comment.node.id"
           class="comment-card"
         >
-          <div v-if="editingCommentId !== comment.id">
+          <div v-if="editingCommentId !== comment.node.id">
             <p class="comment-author">
-              {{ comment.user.name }}
+              {{ comment.node.user.name }}
             </p>
             <p class="comment-body">
-              {{ comment.body }}
+              {{ comment.node.body }}
             </p>
-            <span class="comment-actions" v-if="currentUser?.id === comment.user.id">
-              <button class="edit-btn" @click.stop="editComment(comment.id)">Edit</button>
-              <button class="delete-btn" @click.stop="requestDelete(comment.id)">Delete</button>
+            <span class="comment-actions" v-if="currentUser?.id === comment.node.user.id">
+              <button class="edit-btn" @click.stop="editComment(comment.node.id)">Edit</button>
+              <button class="delete-btn" @click.stop="requestDelete(comment.node.id)">Delete</button>
             </span>
           </div>
 
           <div v-else>
             <CommentForm
-              :comment="comment"
+              :comment="comment.node"
               @comment-edited="handleUpdated"
               @cancel="cancelEdit"
             />
           </div>
         </div>
+
+        <p
+          v-if="post.visibleComments.pageInfo.hasNextPage"
+          class="show-more"
+          @click="loadMoreComments"
+        >
+          Show More Comments
+        </p>
 
         <div class="comment-card">
         <CommentForm
@@ -78,12 +86,16 @@
 
   const showDeleteModal = ref(false);
 
+  const commentIncrement = 10;
+
   defineProps<{ currentUser: any }>();
 
   const route = useRoute();
   const postId = route.params.id;
 
-  const { result, loading, error, refetch } = useQuery(POST_DETAIL, {
+  const { result, loading, error, refetch, fetchMore } = useQuery(POST_DETAIL, {
+    first: commentIncrement,
+    after: null,
     postId: postId,
   });
 
@@ -136,6 +148,32 @@
 
   function cancelEdit() {
     editingCommentId.value = null
+  }
+
+  async function loadMoreComments() {
+    if (!post.value.visibleComments.pageInfo.hasNextPage) return;
+
+    await fetchMore({
+      variables: {
+        first: commentIncrement,
+        after: post.value.visibleComments.pageInfo.endCursor
+      },
+      updateQuery: (prev, { fetchMoreResult }) => {
+        return {
+          post: {
+            ...prev.post,
+            visibleComments: {
+              __typename: prev.post.visibleComments.__typename,
+              edges: [
+                ...prev.post.visibleComments.edges,
+                ...fetchMoreResult.post.visibleComments.edges
+              ],
+              pageInfo: fetchMoreResult.post.visibleComments.pageInfo
+            }
+          }
+        };
+      }
+    });
   }
 </script>
 
@@ -242,5 +280,16 @@
 
 .delete-btn {
   color: #e3342f;
+}
+
+.show-more {
+  color: #3490dc;
+  text-decoration: underline;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.show-more:hover {
+  color: #1d4ed8;
 }
 </style>

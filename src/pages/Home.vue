@@ -25,11 +25,18 @@
       @start-edit="startEditing"
       @delete-post="removePost"
     />
+
+    <button
+      v-if="result?.posts.pageInfo.hasNextPage"
+      @click="loadMore"
+    >
+      Show More
+    </button>
   </div>
 </template>
 
 <script setup lang="ts">
-  import { ref, watch, onMounted, onUnmounted } from 'vue';
+  import { ref, watch, onMounted, onUnmounted, computed } from 'vue';
   import { useQuery } from '@vue/apollo-composable';
   import PostCard from '../components/PostCard.vue';
   import PostForm from '../components/PostForm.vue';
@@ -37,8 +44,15 @@
   import { POST_CREATED } from '@/graphql/subscriptions/post-created';
   import { apolloClient } from '@/apollo/client';
 
-  const postList = ref<any[]>([]);
-  const { result, loading, error } = useQuery(POST_LIST);
+  defineProps<{ currentUser: any }>();
+
+  const postList = computed(() =>
+    result.value?.posts?.edges.map((edge: any) => edge.node) ?? []
+  );
+  const { result, loading, error, fetchMore } = useQuery(POST_LIST, {
+    first: 10,
+    after: null
+  });
 
   const showForm = ref(false);
   const editingPostId = ref<number | null>(null);
@@ -57,17 +71,30 @@
     showForm.value = false;
   }
 
-  defineProps<{ currentUser: any }>();
-
-  watch(
-    result,
-    (newResult) => {
-      if (newResult?.posts) {
-        postList.value = [...newResult.posts];
+  async function loadMore() {
+    if (!result.value?.posts.pageInfo.hasNextPage) return;
+  
+    await fetchMore({
+      variables: {
+        first: 10,
+        after: result.value.posts.pageInfo.endCursor
+      },
+      updateQuery: (previousResult, { fetchMoreResult }) => {
+        if (!fetchMoreResult) return previousResult;
+  
+        return {
+          posts: {
+            __typename: previousResult.posts.__typename,
+            edges: [
+              ...previousResult.posts.edges,
+              ...fetchMoreResult.posts.edges
+            ],
+            pageInfo: fetchMoreResult.posts.pageInfo
+          }
+        };
       }
-    },
-    { immediate: true }
-  );
+    });
+  }
 
   onMounted(() => {
     console.log('mount', postList)
