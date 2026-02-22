@@ -1,8 +1,8 @@
 import { gql } from '@apollo/client/core';
 
-export const SEARCH_USERS = gql`
-  query UserList($first: Int!, $after: String) {
-    searchUsers(first: $first, after: $after) {
+export const USER_LIST = gql`
+  query UserList($first: Int!, $after: String, $query: String) {
+    searchUsers(first: $first, after: $after, query: $query) {
       edges {
         node {
           id

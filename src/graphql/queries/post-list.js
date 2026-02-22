@@ -1,8 +1,16 @@
 import { gql } from '@apollo/client/core'
 
 export const POST_LIST = gql`
-  query PostList($first: Int!, $after: String) {
-    posts(first: $first, after: $after) {
+  query PostList(
+    $first: Int!,
+    $after: String,
+    $userId: ID
+  ) {
+    posts(
+      first: $first,
+      after: $after,
+      userId: $userId
+    ) {
       edges {
         node {
           id

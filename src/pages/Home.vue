@@ -1,37 +1,51 @@
 <template>
-  <div class="home">
-    <div class="home-header">
-      <h2>All Posts</h2>
-      <button @click="showForm = !showForm">
-        {{ showForm ? 'Cancel' : 'Create Post' }}
-      </button>
+  <div class="home-container">
+    <div class="sidebar">
+      <v-combobox
+        v-model="selectedUser"
+        :items="users"
+        item-title="name"
+        item-value="id"
+        label="Select user"
+        dense
+      />
     </div>
 
-    <PostForm
-      v-if="showForm"
-      @post-created="addPost"
-      @cancel="showForm = false"
-    />
+    <div class="main-content">
+      <!-- Header -->
+      <div class="main-header">
+        <h2>All Posts</h2>
+        <button @click="showForm = !showForm">
+          {{ showForm ? 'Cancel' : 'Create Post' }}
+        </button>
+      </div>
 
-    <p v-if="loading">Loading...</p>
-    <p v-if="error">Error: {{ error.message }}</p>
+      <PostForm
+        v-if="showForm"
+        @post-created="addPost"
+        @cancel="showForm = false"
+      />
 
-    <PostCard
-      v-for="post in postList"
-      :key="post.id"
-      :post="post"
-      :currentUser="currentUser"
-      :editingPostId="editingPostId"
-      @start-edit="startEditing"
-      @delete-post="removePost"
-    />
+      <p v-if="loading">Loading...</p>
+      <p v-if="error">Error: {{ error.message }}</p>
 
-    <button
-      v-if="result?.posts.pageInfo.hasNextPage"
-      @click="loadMore"
-    >
-      Show More
-    </button>
+      <PostCard
+        v-for="post in postList"
+        :key="post.id"
+        :post="post"
+        :currentUser="currentUser"
+        :editingPostId="editingPostId"
+        @start-edit="startEditing"
+        @delete-post="removePost"
+      />
+
+      <button
+        v-if="result?.posts.pageInfo.hasNextPage"
+        @click="loadMore"
+      >
+        Show More
+      </button>
+    </div>
   </div>
 </template>
 
@@ -41,17 +55,41 @@
   import PostCard from '../components/PostCard.vue';
   import PostForm from '../components/PostForm.vue';
   import { POST_LIST } from '@/graphql/queries/post-list';
+  import { USER_LIST } from '@/graphql/queries/user-list';
   import { POST_CREATED } from '@/graphql/subscriptions/post-created';
   import { apolloClient } from '@/apollo/client';
 
   defineProps<{ currentUser: any }>();
 
-  const postList = computed(() =>
-    result.value?.posts?.edges.map((edge: any) => edge.node) ?? []
+  const selectedUser = ref(null);
+
+  const users = computed(() => {
+    if (!userList.value?.searchUsers?.edges) return []
+
+    return userList.value.searchUsers.edges.map(edge => edge.node)
+  })
+
+  const postList = computed(() => {
+    console.log('post list', result);
+    return result.value?.posts?.edges.map((edge: any) => edge.node) ?? []
+  }
   );
-  const { result, loading, error, fetchMore } = useQuery(POST_LIST, {
+
+  const { result, loading, error, refetch } = useQuery(POST_LIST, () => ({
     first: 10,
-    after: null
+    after: null,
+    userId: selectedUser.value?.id || null
+  }))
+
+  const {
+    result: userList,
+    loading: userLoading,
+    error: userError,
+    fetchMore: userFetchMore
+  } = useQuery(USER_LIST, {
+    first: 10,
+    after: null,
+    query: ''
   });
 
   const showForm = ref(false);
@@ -69,6 +107,10 @@
 
   function addPost(newPost: any) {
     showForm.value = false;
+  }
+
+  function showFormButon() {
+    console.log('user', error)
   }
 
   async function loadMore() {
@@ -121,16 +163,32 @@
 </script>
 
 <style scoped>
-.home {
-  max-width: 700px;
+.home-container {
+  display: flex;
+  gap: 40px;
+}
+
+.sidebar {
+  width: 200px;
+}
+
+/* Main content */
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 1000px;
   margin: 20px auto;
 }
 
-.home-header {
+.main-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  gap: 12px;
   margin-bottom: 12px;
+  justify-content: space-between;
+  width: 80%;
 }
 
 button {

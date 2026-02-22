@@ -1,10 +1,11 @@
 <template>
-  <Navbar
-    :activeTab="activeTab"
-    :user="user"
-    @update:activeTab="activeTab = $event"
-    @logout="logout"
-  />
+  <v-app>
+    <Navbar
+      :activeTab="activeTab"
+      :user="user"
+      @update:activeTab="activeTab = $event"
+      @logout="logout"
+    />
 
   <!-- <Login
     v-if="!user"
@@ -14,11 +15,13 @@
 
   <Home v-else :currentUser="user" /> -->
 
-  <router-view
-    :currentUser="user"
-    :activeTab="activeTab"
-    @login-success="handleLogin"
-  />
+
+    <router-view
+      :currentUser="user"
+      :activeTab="activeTab"
+      @login-success="handleLogin"
+    />
+  </v-app>
 </template>
 
 <script setup lang="ts">
