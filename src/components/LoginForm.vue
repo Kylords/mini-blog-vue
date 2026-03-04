@@ -4,12 +4,12 @@
 
     <div>
       <label for="email">Email</label>
-      <input type="email" id="email" v-model="loginForm.email" required />
+      <input type="email" id="email" class="input" v-model="loginForm.email" required />
     </div>
 
     <div>
       <label for="password">Password</label>
-      <input type="password" id="password" v-model="loginForm.password" required />
+      <input type="password" id="password" class="input" v-model="loginForm.password" required />
     </div>
 
     <button type="submit">Login</button>
@@ -17,7 +17,7 @@
 </template>
 
 <script lang="ts" setup>
-import { reactive, ref } from 'vue';
+import { reactive, ref, nextTick } from 'vue';
 import { useMutation } from '@vue/apollo-composable';
 import { LOGIN_USER } from '../graphql/mutations/login';
 
@@ -48,16 +48,13 @@ async function handleLogin() {
 
   const data = response.data.login;
 
-  console.log('data', response.data.login);
-
   if (data.errors.length) {
     errors.value = data.errors;
     const errorMessage = data.errors.join('\n');
     notyf.error(errorMessage);
   } else {
     localStorage.setItem('token', data.token);
-    console.log('Logged in user:', data.user);
-
+    await nextTick()
     emit('login-success', data.user, data.token);
   }
 }

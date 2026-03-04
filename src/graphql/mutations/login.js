@@ -7,6 +7,7 @@ export const LOGIN_USER = gql`
         id
         name
         email
+        unreadNotificationsCount
       }
       token
       errors

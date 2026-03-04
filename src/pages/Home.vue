@@ -64,18 +64,20 @@
   const selectedUser = ref(null);
 
   const users = computed(() => {
-    if (!userList.value?.searchUsers?.edges) return []
-
-    return userList.value.searchUsers.edges.map(edge => edge.node)
+    const allOption = { id: null, name: 'All Users' }
+  
+    if (!userList.value?.searchUsers?.edges) {
+      return [allOption]
+    }
+  
+    const fetchedUsers = userList.value.searchUsers.edges.map(edge => edge.node)
+  
+    return [allOption, ...fetchedUsers]
   })
 
-  const postList = computed(() => {
-    console.log('post list', result);
-    return result.value?.posts?.edges.map((edge: any) => edge.node) ?? []
-  }
-  );
+  const postList = ref<any[]>([])
 
-  const { result, loading, error, refetch } = useQuery(POST_LIST, () => ({
+  const { result, loading, error, refetch, fetchMore } = useQuery(POST_LIST, () => ({
     first: 10,
     after: null,
     userId: selectedUser.value?.id || null
@@ -139,12 +141,10 @@
   }
 
   onMounted(() => {
-    console.log('mount', postList)
     subscription = apolloClient.subscribe({
       query: POST_CREATED,
     }).subscribe({
       next({ data }) {
-        console.log('sub data', data);
         if (data?.postCreated?.post) {
           postList.value.unshift(data.postCreated.post);
         }
@@ -160,6 +160,16 @@
       subscription.unsubscribe();
     }
   });
+
+  watch(
+    result,
+    (newResult) => {
+      if (newResult?.posts?.edges) {
+        postList.value = newResult.posts.edges.map(edge => edge.node)
+      }
+    },
+    { immediate: true }
+  )
 </script>
 
 <style scoped>

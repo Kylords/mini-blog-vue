@@ -4,22 +4,22 @@
 
     <div>
       <label for="name">Name</label>
-      <input type="text" id="name" v-model="registerForm.name" required />
+      <input type="text" id="name" class="input" v-model="registerForm.name" required />
     </div>
 
     <div>
       <label for="email">Email</label>
-      <input type="email" id="email" v-model="registerForm.email" required />
+      <input type="email" id="email" class="input" v-model="registerForm.email" required />
     </div>
 
     <div>
       <label for="password">Password</label>
-      <input type="password" id="password" v-model="registerForm.password" required />
+      <input type="password" id="password" class="input" v-model="registerForm.password" required />
     </div>
 
     <div>
       <label for="confirmPassword">Confirm Password</label>
-      <input type="password" id="confirmPassword" v-model="registerForm.confirmPassword" required />
+      <input type="password" id="confirmPassword" class="input" v-model="registerForm.confirmPassword" required />
     </div>
 
     <button type="submit">Register</button>
@@ -27,7 +27,7 @@
 </template>
 
 <script lang="ts" setup>
-import { reactive, ref } from 'vue';
+import { reactive, ref, nextTick } from 'vue';
 import { useMutation } from '@vue/apollo-composable';
 import { REGISTER_USER } from '../graphql/mutations/register';
 
@@ -73,6 +73,7 @@ async function handleRegister() {
   } else {
     localStorage.setItem('token', data.token);
     console.log('Registered user:', data.user);
+    await nextTick()
     emit('login-success', data.user, data.token);
   }
 }
