@@ -13,11 +13,13 @@ const AUTH_TOKEN = 'token';
 const httpLink = new HttpLink({
     uri: HTTP_ENDPOINT,
     headers: {
-      authorization: localStorage.getItem(AUTH_TOKEN) || '',
+      authorization: localStorage.getItem('token') || '',
     },
   });
 
-const cable = ActionCable.createConsumer(WS_ENDPOINT);
+const cable = ActionCable.createConsumer(
+  `${WS_ENDPOINT}?token=${localStorage.getItem(AUTH_TOKEN) || ''}`
+);
 
 const wsLink = new ActionCableLink({
   cable,
@@ -25,6 +27,7 @@ const wsLink = new ActionCableLink({
     token: localStorage.getItem(AUTH_TOKEN) || '',
   },
 });
+
 
 const link = split(
   ({ query }) => {

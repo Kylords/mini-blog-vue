@@ -23,7 +23,8 @@
         </div>
 
         <div
-          v-for="comment in post.visibleComments"
+          v-for="comment in comments"
+          :id="`comment-${comment.id}`"
           :key="comment.id"
           class="comment-card"
         >
@@ -49,6 +50,14 @@
           </div>
         </div>
 
+        <p
+          v-if="post.visibleComments.pageInfo.hasNextPage"
+          class="show-more"
+          @click="loadMoreComments"
+        >
+          Show More Comments
+        </p>
+
         <div class="comment-card">
         <CommentForm
           @comment-created="refetch"
@@ -70,25 +79,60 @@
 <script setup lang="ts">
   import { useQuery, useMutation } from '@vue/apollo-composable';
   import { useRoute } from 'vue-router';
-  import { ref, computed } from 'vue';
+  import { ref, computed, watch, nextTick } from 'vue';
   import { POST_DETAIL } from '@/graphql/queries/post-detail';
+  import { GET_COMMENT } from '@/graphql/queries/get-comment';
   import { DELETE_COMMENT } from '@/graphql/mutations/delete-comment';
   import CommentForm from '../components/CommentForm.vue';
   import ConfirmModal from '../components/ConfirmModal.vue';
 
   const showDeleteModal = ref(false);
 
+  const commentIncrement = 10;
+
   defineProps<{ currentUser: any }>();
 
   const route = useRoute();
   const postId = route.params.id;
+  const commentId = computed(() => route.query.commentId as string | null)
 
-  const { result, loading, error, refetch } = useQuery(POST_DETAIL, {
-    postId: postId,
-  });
+  const injectedComment = computed(() =>
+    specificComment.value?.comment
+  )
+
+  const comments = computed(() => {
+    const edges = post.value?.visibleComments?.edges || []
+    const base = edges.map(e => e.node)
+
+    const comment = injectedComment.value
+
+    if (!comment) return base
+
+    const exists = base.some(c => c.id === comment.id)
+
+    if (exists) return base
+
+    return [...base, comment]
+  })
+
+  const { result, loading, error, refetch, fetchMore } = useQuery(
+    POST_DETAIL,
+    () => ({
+      postId: route.params.id,
+      first: 10,
+      after: null
+    })
+  )
+
+  const { result: specificComment } = useQuery(
+    GET_COMMENT,
+    () => ({ commentId: commentId.value }),
+    { enabled: computed(() => !!commentId.value) }
+  )
 
   const post = computed(() => result.value?.post);
   const editingCommentId = ref<number | null>(null);
+
 
   function editComment(commentId: number) {
     editingCommentId.value = commentId
@@ -137,11 +181,70 @@
   function cancelEdit() {
     editingCommentId.value = null
   }
+
+  const hasScrolledToInjected = ref(false)
+
+  async function loadMoreComments() {
+    if (!post.value.visibleComments.pageInfo.hasNextPage) return;
+
+    await fetchMore({
+      variables: {
+        first: commentIncrement,
+        after: post.value.visibleComments.pageInfo.endCursor
+      },
+      updateQuery: (prev, { fetchMoreResult }) => {
+        return {
+          post: {
+            ...prev.post,
+            visibleComments: {
+              __typename: prev.post.visibleComments.__typename,
+              edges: [
+                ...prev.post.visibleComments.edges,
+                ...fetchMoreResult.post.visibleComments.edges
+              ],
+              pageInfo: fetchMoreResult.post.visibleComments.pageInfo
+            }
+          }
+        };
+      }
+    });
+  }
+
+  watch(
+    [injectedComment, post],
+    async ([comment, postData]) => {
+      console.log('post', post.value)
+      if (hasScrolledToInjected.value) return
+      if (!comment) return
+      if (!postData?.visibleComments?.edges?.length) return
+
+      await nextTick()
+
+      const el = document.getElementById(`comment-${comment.id}`)
+      if (!el) return
+
+      el.scrollIntoView({
+        behavior: "smooth",
+        block: "center"
+      })
+
+      hasScrolledToInjected.value = true
+    }
+  )
+
+  watch(
+    () => route.params.id,
+    () => {
+      hasScrolledToInjected.value = false
+      refetch()
+    },
+    { immediate: true }
+  )
 </script>
 
 <style scoped>
 .container {
-  max-width: 700px;
+  width: 50%;
   margin: 40px auto;
   padding: 0 16px;
   font-family: Arial, sans-serif;
@@ -242,5 +345,16 @@
 
 .delete-btn {
   color: #e3342f;
+}
+
+.show-more {
+  color: #3490dc;
+  text-decoration: underline;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.show-more:hover {
+  color: #1d4ed8;
 }
 </style>

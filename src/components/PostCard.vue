@@ -110,6 +110,7 @@
   margin-bottom: 12px;
   border-radius: 8px;
   cursor: pointer;
+  width: 80%;
 }
 
 .post-user {

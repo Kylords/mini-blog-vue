@@ -45,10 +45,31 @@
         });
         emit('post-edited', data.editPost.post);
       } else {
-        const { data } = await createPost({
-          title: title.value,
-          body: body.value,
-        });
+        const { data } = await createPost(
+          {
+            title: title.value,
+            body: body.value,
+          },
+          {
+            update(cache, { data }) {
+              const newPost = data.createPost.post
+        
+              cache.modify({
+                fields: {
+                  posts(existing) {
+                    return {
+                      ...existing,
+                      edges: [
+                        { __typename: "PostEdge", node: newPost },
+                        ...existing.edges,
+                      ]
+                    }
+                  }
+                }
+              })
+            }
+          }
+        )
         emit('post-created', data.createPost.post);
       }
     } catch (err: any) {

@@ -1,10 +1,12 @@
 <template>
-  <Navbar
-    :activeTab="activeTab"
-    :user="user"
-    @update:activeTab="activeTab = $event"
-    @logout="logout"
-  />
+  <v-app>
+    <Navbar
+      :activeTab="activeTab"
+      :user="user"
+      @update:activeTab="activeTab = $event"
+      @logout="logout"
+      @update-notif-count="notifCount = $event"
+    />
 
   <!-- <Login
     v-if="!user"
@@ -14,11 +16,13 @@
 
   <Home v-else :currentUser="user" /> -->
 
-  <router-view
-    :currentUser="user"
-    :activeTab="activeTab"
-    @login-success="handleLogin"
-  />
+
+    <router-view
+      :currentUser="user"
+      :activeTab="activeTab"
+      @login-success="handleLogin"
+    />
+  </v-app>
 </template>
 
 <script setup lang="ts">
@@ -32,8 +36,10 @@
 
   const activeTab = ref<'signin' | 'register'>('signin');
   const user = ref(null);
+  const notifCount = ref(0);
 
   function handleLogin(loggedInUser: any, token: string) {
+    notifCount.value = loggedInUser.unreadNotificationsCount
     user.value = loggedInUser;
     localStorage.setItem('user', JSON.stringify(loggedInUser));
     localStorage.setItem('token', token);
@@ -53,7 +59,11 @@
     const token = localStorage.getItem('token');
 
     if (storedUser && token) {
-      user.value = JSON.parse(storedUser);
+      const parsedUser = JSON.parse(storedUser)
+      user.value = parsedUser
+      notifCount.value = parsedUser.unreadNotificationsCount || 0
+    } else {
+      router.push({ name: 'Login' });
     }
   });
 </script>
